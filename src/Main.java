@@ -1,4 +1,4 @@
-import java.util.*;
+import java.util.Scanner;
 
 class BankAccount {
     String accountNumber;
@@ -17,16 +17,138 @@ class BankAccount {
     }
 }
 
+class Node<T> {
+    T data;
+    Node<T> next;
+
+    Node(T data) {
+        this.data = data;
+        this.next = null;
+    }
+}
+
+class MyLinkedList<T> {
+    Node<T> head;
+    int size;
+
+    MyLinkedList() {
+        head = null;
+        size = 0;
+    }
+
+    void add(T data) {
+        Node<T> newNode = new Node<>(data);
+        if (head == null) {
+            head = newNode;
+        } else {
+            Node<T> current = head;
+            while (current.next != null) {
+                current = current.next;
+            }
+            current.next = newNode;
+        }
+        size++;
+    }
+
+    T removeLast() {
+        if (head == null) return null;
+        if (head.next == null) {
+            T data = head.data;
+            head = null;
+            size--;
+            return data;
+        }
+        Node<T> current = head;
+        while (current.next.next != null) {
+            current = current.next;
+        }
+        T data = current.next.data;
+        current.next = null;
+        size--;
+        return data;
+    }
+
+    T peekLast() {
+        if (head == null) return null;
+        Node<T> current = head;
+        while (current.next != null) {
+            current = current.next;
+        }
+        return current.data;
+    }
+
+    T removeFirst() {
+        if (head == null) return null;
+        T data = head.data;
+        head = head.next;
+        size--;
+        return data;
+    }
+
+    T peekFirst() {
+        if (head == null) return null;
+        return head.data;
+    }
+
+    boolean isEmpty() {
+        return head == null;
+    }
+
+    int size() {
+        return size;
+    }
+}
+
+class MyStack<T> {
+    MyLinkedList<T> list = new MyLinkedList<>();
+
+    void push(T data) {
+        list.add(data); // top = last node
+    }
+
+    T pop() {
+        return list.removeLast();
+    }
+
+    T peek() {
+        return list.peekLast();
+    }
+
+    boolean isEmpty() {
+        return list.isEmpty();
+    }
+}
+
+
+class MyQueue<T> {
+    MyLinkedList<T> list = new MyLinkedList<>();
+
+    void add(T data) {
+        list.add(data); // back = last node
+    }
+
+    T poll() {
+        return list.removeFirst(); // front = first node
+    }
+
+    T peek() {
+        return list.peekFirst();
+    }
+
+    boolean isEmpty() {
+        return list.isEmpty();
+    }
+}
+
 public class Main {
 
-    static LinkedList<BankAccount> accounts        = new LinkedList<>(); // Task 1, 2, 5
-    static Stack<String>           transHistory    = new Stack<>();      // Task 3
-    static Queue<String>           billQueue       = new LinkedList<>(); // Task 4
-    static Queue<BankAccount>      accountRequests = new LinkedList<>(); // Task 5
+    // ── Shared data structures (all manual, no import) ─
+    static MyLinkedList<BankAccount> accounts        = new MyLinkedList<>();
+    static MyStack<String>           transHistory    = new MyStack<>();
+    static MyQueue<String>           billQueue       = new MyQueue<>();
+    static MyQueue<BankAccount>      accountRequests = new MyQueue<>();
 
     static Scanner sc = new Scanner(System.in);
-
-    //TASK 1
 
 
     static void addAccount(String accNum, String username, double balance) {
@@ -38,17 +160,23 @@ public class Main {
         if (accounts.isEmpty()) { System.out.println("No accounts found."); return; }
         System.out.println("Accounts List:");
         int i = 1;
-        for (BankAccount a : accounts)
+        Node<BankAccount> current = accounts.head;
+        while (current != null) {
+            BankAccount a = current.data;
             System.out.println(i++ + ". " + a.username + " -- Balance: " + (int) a.balance);
+            current = current.next;
+        }
     }
 
     static BankAccount searchByUsername(String username) {
-        for (BankAccount a : accounts)
-            if (a.username.equalsIgnoreCase(username)) return a;
+        Node<BankAccount> current = accounts.head;
+        while (current != null) {
+            if (current.data.username.equalsIgnoreCase(username)) return current.data;
+            current = current.next;
+        }
         return null;
     }
 
-    //TASK 2 Deposit n Withdraw
 
     static void deposit(String username, double amount) {
         BankAccount a = searchByUsername(username);
@@ -67,7 +195,6 @@ public class Main {
         transHistory.push("Withdraw " + (int) amount + " from " + username);
     }
 
-    //TASK 3 Transaction History (Stack LIFO)
 
     static void displayLastTransaction() {
         if (transHistory.isEmpty()) { System.out.println("No transactions yet."); return; }
@@ -81,14 +208,20 @@ public class Main {
 
     static void displayAllTransactions() {
         if (transHistory.isEmpty()) { System.out.println("No transactions yet."); return; }
+        int size = transHistory.list.size();
+        String[] arr = new String[size];
+        Node<String> current = transHistory.list.head;
+        int i = 0;
+        while (current != null) {
+            arr[i++] = current.data;
+            current = current.next;
+        }
         System.out.println("Transaction History (newest first):");
-        List<String> list = new ArrayList<>(transHistory);
-        Collections.reverse(list);
-        int i = 1;
-        for (String t : list) System.out.println(i++ + ". " + t);
+        for (int j = size - 1; j >= 0; j--) {
+            System.out.println((size - j) + ". " + arr[j]);
+        }
     }
 
-    //TASK 4 Bill Payment Queue (Queue FIFO)
 
     static void addBill(String bill) {
         billQueue.add(bill);
@@ -107,11 +240,12 @@ public class Main {
         if (billQueue.isEmpty()) { System.out.println("Bill queue is empty."); return; }
         System.out.println("Bill Queue:");
         int i = 1;
-        for (String b : billQueue) System.out.println(i++ + ". " + b);
+        Node<String> current = billQueue.list.head;
+        while (current != null) {
+            System.out.println(i++ + ". " + current.data);
+            current = current.next;
+        }
     }
-
-
-    //TASK 5 Account Opening Queue (Admin Simulation)
 
     static void submitAccountRequest(String accNum, String username, double balance) {
         accountRequests.add(new BankAccount(accNum, username, balance));
@@ -129,8 +263,13 @@ public class Main {
         if (accountRequests.isEmpty()) { System.out.println("No pending requests."); return; }
         System.out.println("Pending Account Requests:");
         int i = 1;
-        for (BankAccount a : accountRequests) System.out.println(i++ + ". " + a.username);
+        Node<BankAccount> current = accountRequests.list.head;
+        while (current != null) {
+            System.out.println(i++ + ". " + current.data.username);
+            current = current.next;
+        }
     }
+
 
     static void runTask6() {
         System.out.println("\n-- Task 6: BankAccount Array --");
@@ -142,7 +281,6 @@ public class Main {
             System.out.println((i + 1) + ". " + arr[i]);
     }
 
-    // Uses LinkedList accounts + Stack history
     static void bankMenu() {
         while (true) {
             System.out.println("\n=== BANK MENU ===");
@@ -166,9 +304,7 @@ public class Main {
                     System.out.print("Initial Balance: ");double bl = Double.parseDouble(sc.nextLine());
                     addAccount(an, un, bl);
                     break;
-                case "2":
-                    displayAccounts();
-                    break;
+                case "2": displayAccounts(); break;
                 case "3":
                     System.out.print("Enter username: ");
                     BankAccount found = searchByUsername(sc.nextLine());
@@ -191,9 +327,9 @@ public class Main {
                     System.out.print("Amount: ");         double wa = Double.parseDouble(sc.nextLine());
                     withdraw(wu, wa);
                     break;
-                case "7": displayLastTransaction();  break;
-                case "8": undoLastTransaction();     break;
-                case "9": displayAllTransactions();  break;
+                case "7": displayLastTransaction(); break;
+                case "8": undoLastTransaction();    break;
+                case "9": displayAllTransactions(); break;
                 case "0": return;
                 default:  System.out.println("Invalid option.");
             }
@@ -255,8 +391,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-
-        //Pre-load 2 accounts
         addAccount("001", "Ali",  150000);
         addAccount("002", "Sara", 220000);
         runTask6();
@@ -270,7 +404,7 @@ public class Main {
             System.out.println("║ 3 -- Admin Area      ║");
             System.out.println("║ 4 -- Exit            ║");
             System.out.println("╚══════════════════════╝");
-            System.out.print("Enter a number: ");
+            System.out.print("Choice: ");
 
             String choice = sc.nextLine().trim();
             switch (choice) {
